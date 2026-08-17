@@ -1,0 +1,20 @@
+faster-whisper~=1.0.3
+transformers
+torch  # version resolved by index
+torchaudio
+librosa
+resampy
+soundfile
+praat-parselmouth
+gradio
+ollama~=0.3.3
+SQLAlchemy
+pydantic
+python-dotenv
+numpy
+scipy
+rich
+pytest
+scikit-learn
+joblib
+matplotlib

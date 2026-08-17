@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=72", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "neurospeak-ai"
+version = "0.1.0"
+description = "AI-powered dysarthric speech recognition and rehabilitation system"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "NeuroSpeak-AI Contributors" }]
+keywords = ["speech", "dysarthria", "ASR", "whisper", "rehabilitation", "AI"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+neurospeak = "app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neurospeak_ai*", "audio*", "asr*", "agents*", "embeddings*", "severity*", "acoustics*", "coaching*", "storage*", "providers*", "ui*", "utils*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+log_cli = true
+log_cli_level = "INFO"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "W", "I", "N", "UP", "ANN", "B", "SIM"]
+ignore = ["ANN101", "ANN102", "ANN401"]
+exclude = ["tests/", "providers/"]
+
+[tool.ruff.per-file-ignores]
+"config.py" = ["N802"]
+"app.py" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

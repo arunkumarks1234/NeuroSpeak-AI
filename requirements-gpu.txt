@@ -1,0 +1,13 @@
+# ── NVIDIA CUDA Upgrade Path ──────────────────────────────────────────────────
+# Use this file INSTEAD OF requirements.txt if you have an NVIDIA GPU.
+# This installs the CUDA-compiled versions of PyTorch and CTranslate2.
+
+torch~=2.3.1 --index-url https://download.pytorch.org/whl/cu121
+torchaudio~=2.3.1 --index-url https://download.pytorch.org/whl/cu121
+
+# ── NVIDIA Backends ─────────────────────────────────────────────────────────
+# Uncomment these to use NeMo ASR/Embeddings or Riva ASR.
+# Note: nvidia-nemo is a large library and requires a Linux environment.
+# Set ASR_PROVIDER=nemo in .env after installing.
+nvidia-nemo[asr]~=1.23.0
+# nvidia-riva-client~=2.16.0

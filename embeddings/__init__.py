@@ -1,0 +1,1 @@
+"""NeuroSpeak-AI embeddings package."""

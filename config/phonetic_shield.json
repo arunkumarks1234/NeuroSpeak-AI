@@ -1,0 +1,149 @@
+{
+  "_comment": "NeuroSpeak-AI Phonetic Shield substitution dictionary.",
+  "_description": "Maps common dysarthric speech errors → intended words. Keys are lowercase regex patterns. Applied in the order listed. Add new entries to extend coverage.",
+  "_version": "1.0.0",
+
+  "substitutions": {
+    "phoneme_simplification": {
+      "comment": "Consonant cluster simplification — common in moderate/severe dysarthria",
+      "pwease": "please",
+      "pweese": "please",
+      "bwead": "bread",
+      "fwend": "friend",
+      "fwont": "front",
+      "stweet": "street",
+      "stwong": "strong",
+      "spwead": "spread",
+      "scween": "screen",
+      "thwow": "throw",
+      "thwee": "three",
+      "gweat": "great",
+      "gwound": "ground",
+      "dwink": "drink",
+      "dwive": "drive",
+      "twain": "train",
+      "twuck": "truck",
+      "twee": "tree"
+    },
+
+    "vowel_distortion": {
+      "comment": "Vowel errors from reduced oral motor control",
+      "wuz": "was",
+      "becuz": "because",
+      "becoss": "because",
+      "becourse": "because",
+      "hav": "have",
+      "giv": "give",
+      "liv": "live",
+      "wil": "will",
+      "wen": "when",
+      "thet": "that",
+      "thot": "that",
+      "whet": "what",
+      "whot": "what"
+    },
+
+    "voice_onset": {
+      "comment": "Voicing errors — voiced↔unvoiced confusion",
+      "togs": "dogs",
+      "tog": "dog",
+      "pird": "bird",
+      "pox": "box",
+      "kirl": "girl",
+      "kreen": "green",
+      "clue": "glue",
+      "tarden": "garden",
+      "toor": "door",
+      "pall": "ball",
+      "pike": "bike"
+    },
+
+    "final_consonant_deletion": {
+      "comment": "Dropped final consonants — words ending sounds omitted",
+      "tha": "that",
+      "wi": "with",
+      "an": "and",
+      "han": "hand",
+      "frien": "friend",
+      "aroun": "around",
+      "behin": "behind",
+      "nee": "need",
+      "fe": "feel"
+    },
+
+    "nasality": {
+      "comment": "Hypernasality substitutions",
+      "mnake": "make",
+      "ngo": "go",
+      "nget": "get",
+      "ngood": "good",
+      "ngreat": "great"
+    },
+
+    "prosodic": {
+      "comment": "Prosodic/rhythm distortions — common filler / run-on words",
+      "iw": "i will",
+      "ima": "i am going to",
+      "gunna": "going to",
+      "wanna": "want to",
+      "hafta": "have to",
+      "oughta": "ought to",
+      "kinda": "kind of",
+      "sorta": "sort of",
+      "lotta": "a lot of",
+      "coupla": "couple of"
+    },
+
+    "articulatory_imprecision": {
+      "comment": "General articulatory imprecision — blurred sounds",
+      "sumfing": "something",
+      "somefing": "something",
+      "nuffin": "nothing",
+      "everfing": "everything",
+      "uvver": "other",
+      "anover": "another",
+      "bruvver": "brother",
+      "muvver": "mother",
+      "fevver": "feather",
+      "togevver": "together",
+      "whever": "whether",
+      "bother": "bother",
+      "bovver": "bother"
+    },
+
+    "common_misrecognitions": {
+      "comment": "Words Whisper commonly misrecognises for dysarthric speakers",
+      "a.i.": "AI",
+      "couldnt": "couldn't",
+      "doesnt": "doesn't",
+      "didnt": "didn't",
+      "isnt": "isn't",
+      "wont": "won't",
+      "dont": "don't",
+      "cant": "can't",
+      "wouldnt": "wouldn't",
+      "shouldnt": "shouldn't"
+    }
+  },
+
+  "regex_patterns": [
+    {
+      "comment": "Remove repeated stutters — e.g. 'I I I want' → 'I want'",
+      "pattern": "\\b(\\w+)( \\1){2,}\\b",
+      "replacement": "\\1",
+      "flags": ["IGNORECASE"]
+    },
+    {
+      "comment": "Collapse excessive spaces",
+      "pattern": "\\s{2,}",
+      "replacement": " ",
+      "flags": []
+    },
+    {
+      "comment": "Remove trailing punctuation artefacts from Whisper",
+      "pattern": "\\.{3,}",
+      "replacement": ".",
+      "flags": []
+    }
+  ]
+}
