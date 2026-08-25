@@ -72,7 +72,7 @@ def preprocess(audio_input: AudioInput) -> ProcessedAudio:
 
     # ── Step 1: Resample ─────────────────────────────────────────────────────
     if sr != TARGET_SAMPLE_RATE:
-        logger.info("Resampling from %d Hz → %d Hz.", sr, TARGET_SAMPLE_RATE)
+        logger.info("Resampling from %d Hz -> %d Hz.", sr, TARGET_SAMPLE_RATE)
         
         # Try GPU acceleration via Torchaudio if configured for CUDA
         if config.device == "cuda":

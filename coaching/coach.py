@@ -144,6 +144,16 @@ class CoachingEngine:
             logger.info("No prompt template — using static recommendations.")
             return _STATIC_RECS.get(severity_level, _STATIC_RECS[SeverityLevel.UNKNOWN])
 
+        # Fast pre-flight check for Ollama host
+        import urllib.request
+        try:
+            req = urllib.request.Request(f"{config.ollama_host}/api/tags", method="GET")
+            with urllib.request.urlopen(req, timeout=0.2):
+                pass
+        except Exception:
+            logger.info("Ollama host unreachable — using static recommendations for speed.")
+            return _STATIC_RECS.get(severity_level, _STATIC_RECS[SeverityLevel.UNKNOWN])
+
         prompt = self._build_prompt(severity_level, transcript, acoustic_features)
 
         try:

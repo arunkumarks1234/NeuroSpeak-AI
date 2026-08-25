@@ -28,13 +28,20 @@ def main() -> None:
 
     app = build_interface()
 
+    logger.info("Pre-warming ASR and Embedding models for fast inference...")
+    try:
+        from ui.interface import _pipeline
+        _pipeline._get_asr().warm_up()
+        _pipeline._get_embedding().warm_up()
+        logger.info("Models pre-warmed and ready in RAM.")
+    except Exception as exc:
+        logger.warning("Pre-warm note: %s", exc)
+
     try:
         app.launch(
             server_name=config.gradio_server_name,
             server_port=config.gradio_server_port,
             share=config.gradio_share,
-            favicon_path=None,  # can add an icon here later
-            show_api=False,
         )
     except Exception as exc:
         logger.critical("Failed to launch Gradio server: %s", exc, exc_info=True)

@@ -125,6 +125,31 @@ class AgentOrchestrator:
         guard_triggered = False
         ollama_available = True
 
+        # Fast pre-flight check (0.2s) to verify Ollama host reachability
+        import urllib.request
+        try:
+            req = urllib.request.Request(f"{config.ollama_host}/api/tags", method="GET")
+            with urllib.request.urlopen(req, timeout=0.2):
+                ollama_available = True
+        except Exception:
+            ollama_available = False
+
+        if not ollama_available:
+            logger.info("Ollama host %s unreachable — skipping agent loop for instant analysis.", config.ollama_host)
+            return OrchestrationResult(
+                final_text=shield_transcript,
+                raw_transcript=raw_transcript,
+                shield_transcript=shield_transcript,
+                shield_changes=shield_changes,
+                rounds_completed=0,
+                agent_log=[],
+                guard_triggered=guard_triggered,
+                ollama_available=False,
+                proposed_text=shield_transcript,
+                critic_verdict="N/A (Ollama offline)",
+                number_of_rounds=0,
+            )
+
         # Pre-flight: guard on the shield transcript itself
         is_valid, wc, max_wc = self._guard.check(shield_transcript, duration_seconds)
         if not is_valid:

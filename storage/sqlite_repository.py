@@ -98,3 +98,13 @@ class SQLiteSessionRepository(SessionRepository):
         """Total number of stored sessions."""
         with self._session() as sess:
             return sess.query(SessionRecordORM).count()
+
+    def dispose(self) -> None:
+        """Dispose the SQLAlchemy engine, closing all pooled connections.
+
+        Call this when the repository is no longer needed — particularly in
+        tests and CLI tools — to release the SQLite file lock so the file
+        can be safely deleted (especially on Windows).
+        """
+        self._engine.dispose()
+        logger.debug("SQLiteSessionRepository: engine disposed.")

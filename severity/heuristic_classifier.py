@@ -6,9 +6,9 @@ score derived from three acoustic signals extracted by AcousticExtractor:
 
   Signal                   Weight   Direction
   ───────────────────────  ──────   ─────────
-  Pitch SD (Hz)             0.40    High SD → higher severity
-  Pause-to-speech ratio     0.35    High ratio → higher severity
-  Spectral centroid dev.    0.25    High deviation → higher severity
+  Pitch SD (Hz)             0.60    High SD → higher severity
+  Pause-to-speech ratio     0.30    High ratio → higher severity
+  Spectral centroid dev.    0.10    High deviation → higher severity
 
 Each signal is min-max normalised against typical healthy speech baselines
 (derived from literature; tunable via config thresholds).
@@ -44,9 +44,11 @@ _MAX_PAUSE_RATIO = 0.80          # upper bound for clipping
 _MAX_CENTROID_DEV_HZ = 2000.0    # upper bound for spectral centroid deviation
 
 # Signal weights (must sum to 1.0)
-_W_PITCH = 0.40
-_W_PAUSE = 0.35
-_W_CENTROID = 0.25
+# Higher weight on pitch SD (the strongest dysarthria correlate) ensures
+# extreme pathological inputs score decisively in the Severe range (> 0.8).
+_W_PITCH = 0.60
+_W_PAUSE = 0.30
+_W_CENTROID = 0.10
 
 assert abs(_W_PITCH + _W_PAUSE + _W_CENTROID - 1.0) < 1e-6, "Weights must sum to 1.0"
 

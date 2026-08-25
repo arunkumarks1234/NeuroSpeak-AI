@@ -34,3 +34,11 @@ class SessionRepository(ABC):
     @abstractmethod
     def count(self) -> int:
         """Return the total number of stored sessions."""
+
+    def dispose(self) -> None:
+        """Release any underlying database connections / file handles.
+
+        Override in backends that hold persistent connections (e.g. SQLite,
+        PostgreSQL) so callers (tests, CLI tools) can cleanly free resources.
+        The default implementation is a no-op.
+        """

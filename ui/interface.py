@@ -201,7 +201,7 @@ def _make_spectrogram(audio: np.ndarray, sr: int) -> str | None:
             D,
             aspect="auto",
             origin="lower",
-            extent=[0, len(audio) / sr, 0, sr / 2],
+            extent=(0.0, len(audio) / sr, 0.0, sr / 2),
             cmap="magma",
         )
         ax.set_title("Spectrogram", color="#e2e8f0", fontsize=10)
@@ -493,21 +493,18 @@ def build_interface() -> gr.Blocks:
                                 label="4️⃣ Raw Transcription",
                                 lines=2,
                                 interactive=False,
-                                show_copy_button=True,
                             )
                             # Section 5: Phonetic Shield output
                             shield_tr = gr.Textbox(
                                 label="5️⃣ Phonetic Shield Output",
                                 lines=2,
                                 interactive=False,
-                                show_copy_button=True,
                             )
                             # Section 6: Corrected transcription
                             final_tr = gr.Textbox(
                                 label="6️⃣ Corrected Transcription (Multi-Agent)",
                                 lines=3,
                                 interactive=False,
-                                show_copy_button=True,
                             )
 
                         with gr.Accordion("📊 Severity & Confidence (7–8)", open=True):
