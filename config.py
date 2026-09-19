@@ -133,6 +133,12 @@ class NeuroSpeakConfig:
     gradio_server_port: int
     gradio_share: bool
 
+    # ── Gemini API & Voice Synthesis ──
+    gemini_api_key: str
+    gemini_model: str
+    target_language: str  # "auto" | "en" | "kn"
+    tts_enabled: bool
+
     # ── Severity thresholds ──
     severity_mild_max: float
     severity_moderate_max: float
@@ -174,7 +180,11 @@ def _build_config() -> NeuroSpeakConfig:
         severity_model_path=Path(
             _env("SEVERITY_MODEL_PATH", "./ml_models/severity_model.joblib")
         ),
-        # Agents
+        # Agents & Gemini
+        gemini_api_key=_env("GEMINI_API_KEY", ""),
+        gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
+        target_language=_env("TARGET_LANGUAGE", "auto"),
+        tts_enabled=_env_bool("TTS_ENABLED", True),
         ollama_host=_env("OLLAMA_HOST", "http://localhost:11434"),
         qwen_model=_env("QWEN_MODEL", "qwen2.5"),
         llama_model=_env("LLAMA_MODEL", "llama3.1"),

@@ -227,28 +227,66 @@ def _make_spectrogram(audio: np.ndarray, sr: int) -> str | None:
 # Core processing function
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _visual_intent_html(category: str, summary: str, svg_code: str) -> str:
+    return f"""
+<div style="display:flex; align-items:center; gap:1.25rem; padding:1.25rem;
+            background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+            border-radius:16px; border:1px solid #6366f1; box-shadow: 0 8px 32px rgba(99,102,241,0.25);">
+  <div style="flex-shrink:0; background:#0f172a; padding:0.5rem; border-radius:14px; border:1px solid #334155;">
+    {svg_code}
+  </div>
+  <div style="flex:1;">
+    <div style="font-size:0.75rem; color:#a5b4fc; text-transform:uppercase; font-weight:700; letter-spacing:0.08em; margin-bottom:0.25rem;">
+      📷 Visual Intent Box (Caregiver Understanding)
+    </div>
+    <div style="font-size:1.4rem; font-weight:800; color:#f8fafc; margin-bottom:0.25rem;">
+      {summary}
+    </div>
+    <div style="display:inline-block; font-size:0.8rem; padding:0.2rem 0.6rem; background:#4338ca; color:#e0e7ff; border-radius:6px; font-weight:600;">
+      Intent: {category}
+    </div>
+  </div>
+</div>
+"""
+
+
+def _voice_audio_html(audio_b64: str) -> str:
+    if not audio_b64:
+        return "<p style='color:#64748b; font-size:0.85rem;'>Voice output synthesis disabled or unavailable.</p>"
+    return f"""
+<div style="display:flex; flex-direction:column; gap:0.5rem; padding:1rem;
+            background:#0f172a; border-radius:12px; border:1px solid #334155;">
+  <div style="font-size:0.75rem; color:#818cf8; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">
+    🔊 Voice Output Synthesis (Text-to-Speech)
+  </div>
+  <audio controls autoplay style="width:100%; height:40px; margin-top:0.25rem;">
+    <source src="{audio_b64}" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+</div>
+"""
+
+
 def _process(
     file_audio: str | None,
     mic_audio: tuple | None,
     patient_name: str,
     patient_age: str,
     session_note: str,
+    lang_choice: str = "Auto-detect",
 ) -> tuple:
     """
     Process audio from either file upload or microphone.
-
-    Returns:
-        raw_tr, shield_tr, final_tr, severity_html, confidence_html,
-        acoustic_html, spectrogram_img, coaching_html, agent_html,
-        system_banner, status_md, warnings_md
     """
     _session_meta.update(
         {"patient_name": patient_name or "", "patient_age": patient_age or "", "session_note": session_note or ""}
     )
-    EMPTY = (
-        "", "", "", "", "", "", None, "", "",
-        "", "⏳ Ready", "",
-    )
+    if lang_choice == "Kannada (ಕನ್ನಡ)":
+        config.__dict__["target_language"] = "kn"
+    elif lang_choice == "English":
+        config.__dict__["target_language"] = "en"
+    else:
+        config.__dict__["target_language"] = "auto"
 
     try:
         if file_audio:
@@ -258,13 +296,12 @@ def _process(
             audio_input = load_from_microphone(sr, arr)
         else:
             return (
-                "", "", "", "", "", "", None, "", "",
+                "", "", "", "", "", "", "", "", "", None, "", "",
                 "", "⚠ Please upload a file or record audio.", "",
             )
 
         result: PipelineResult = _pipeline.run(audio_input)
 
-        # ── Assemble outputs ──────────────────────────────────────────────
         raw_tr = result.raw_transcript
         shield_tr = result.shield_transcript
 
@@ -274,6 +311,12 @@ def _process(
             shield_note = f"\n\n*Phonetic corrections: {changes_str}*"
 
         final_tr = result.final_transcript
+        kannada_tr = result.kannada_transcript
+
+        visual_html = _visual_intent_html(
+            result.intent_category, result.intent_summary, result.visual_intent_svg
+        )
+        voice_html = _voice_audio_html(result.tts_audio_b64)
 
         sev_html = _severity_html(
             result.severity.level.value if hasattr(result.severity.level, "value")
@@ -293,15 +336,6 @@ def _process(
         )
         banner_html = _system_banner_html(result)
 
-        # Spectrogram from the preprocessed audio
-        spec_plt = _make_spectrogram(
-            np.asarray(result.acoustic_features.to_dict().get("_audio", [])),
-            16_000,
-        )
-        # Note: PipelineResult does not carry the raw audio array; generate
-        # the spectrogram upstream is not possible here. We use a placeholder
-        # and regenerate from the pipeline output in a future enhancement.
-        # For now, return None and rely on the audio input widget.
         spec_plt = None
 
         status_md = (
@@ -316,9 +350,12 @@ def _process(
             warnings_md = "⚠ **Warnings:**\n" + "\n".join(f"- {w}" for w in result.warnings)
 
         return (
+            visual_html,
+            voice_html,
             raw_tr,
             shield_tr + shield_note,
             final_tr,
+            kannada_tr,
             sev_html,
             conf_html,
             ac_html,
@@ -333,12 +370,12 @@ def _process(
     except (AudioLoadError, AudioPreprocessError) as exc:
         msg = f"❌ Audio error: {exc}"
         logger.warning(msg)
-        return ("", "", "", "", "", "", None, "", "", "", msg, "")
+        return ("", "", "", "", "", "", "", "", "", None, "", "", "", msg, "")
 
     except Exception as exc:  # noqa: BLE001
         msg = f"❌ Unexpected error: {exc}"
         logger.error(msg, exc_info=True)
-        return ("", "", "", "", "", "", None, "", "", "", msg, "")
+        return ("", "", "", "", "", "", "", "", "", None, "", "", "", msg, "")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

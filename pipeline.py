@@ -35,6 +35,8 @@ from audio.preprocessor import ProcessedAudio, preprocess
 from coaching.coach import CoachingEngine
 from config import config
 from embeddings.base import EmbeddingProvider
+from services.gemini_service import GeminiAnalysisResult, GeminiService
+from services.tts_service import TTSService
 from severity.base import SeverityClassifier, SeverityResult
 from storage.models import SessionRecord
 from storage.sqlite_repository import SQLiteSessionRepository
@@ -46,6 +48,7 @@ logger = get_logger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 # Pipeline Result
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @dataclass
 class PipelineResult:
@@ -80,9 +83,17 @@ class PipelineResult:
     # Coaching
     coaching_recommendations: list[str]
 
+    # Gemini & Kannada & Visual Intent
+    intent_category: str = "General Communication"
+    intent_summary: str = ""
+    kannada_transcript: str = ""
+    visual_intent_svg: str = ""
+    tts_audio_b64: str = ""
+    tts_audio_path: str = ""
+
     # Storage
-    session_id: str
-    timestamp: datetime
+    session_id: str = ""
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Timing
     elapsed_seconds: float = 0.0
@@ -146,12 +157,15 @@ class NeuroSpeakPipeline:
         self._severity_classifier: SeverityClassifier | None = None
         self._coaching_engine = CoachingEngine()
         self._repository = SQLiteSessionRepository()
+        self._gemini = GeminiService()
+        self._tts = TTSService()
 
         logger.info(
-            "NeuroSpeakPipeline ready | ASR=%s | Embedding=%s | Device=%s",
+            "NeuroSpeakPipeline ready | ASR=%s | Embedding=%s | Device=%s | Gemini=%s",
             config.asr_provider,
             config.embedding_provider,
             config.device,
+            self._gemini.is_available,
         )
 
     # ── Lazy loaders ────────────────────────────────────────────────────────
@@ -297,6 +311,34 @@ class NeuroSpeakPipeline:
             coaching = ["Coaching recommendations unavailable — please try again."]
             warnings.append(f"Coaching failed: {exc}")
 
+        # ── Step 8b: Gemini Intent & Kannada Translation ────────────────────
+        try:
+            gemini_res: GeminiAnalysisResult = self._gemini.analyze_intent(
+                raw_transcript=raw_transcript,
+                shield_transcript=orch_result.final_text,
+                target_language=config.target_language,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Gemini service error: %s", exc)
+            gemini_res = self._gemini._fallback_analysis(orch_result.final_text, config.target_language)
+            warnings.append(f"Gemini analysis fallback: {exc}")
+
+        # ── Step 8c: Voice TTS Output ─────────────────────────────────────────
+        tts_file, tts_b64 = None, None
+        try:
+            tts_text = (
+                gemini_res.reconstructed_kannada
+                if config.target_language == "kn"
+                else gemini_res.reconstructed_english
+            )
+            tts_file, tts_b64 = self._tts.synthesize(
+                text=tts_text,
+                lang="kn" if config.target_language == "kn" else "en",
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("TTS synthesis error: %s", exc)
+            warnings.append(f"TTS voice output failed: {exc}")
+
         # ── Step 9: Save session ─────────────────────────────────────────────
         import uuid  # noqa: PLC0415
         session_id = str(uuid.uuid4())
@@ -347,6 +389,12 @@ class NeuroSpeakPipeline:
             acoustic_features=acoustic_features,
             severity=severity,
             coaching_recommendations=coaching,
+            intent_category=gemini_res.intent_category,
+            intent_summary=gemini_res.intent_summary,
+            kannada_transcript=gemini_res.reconstructed_kannada,
+            visual_intent_svg=gemini_res.visual_scene_svg,
+            tts_audio_b64=tts_b64 or "",
+            tts_audio_path=tts_file or "",
             session_id=session_id,
             timestamp=timestamp,
             elapsed_seconds=elapsed,
